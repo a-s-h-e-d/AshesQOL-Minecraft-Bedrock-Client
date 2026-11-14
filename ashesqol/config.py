@@ -5,11 +5,10 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = ROOT / "config" / "settings.json"
+from .paths import CONFIG_PATH
 
 DEFAULTS = {
-    "source": "mock",              # "mock" (demo data) or "memory" (read from Minecraft)
+    "source": "memory",            # "memory" (read from Minecraft) or "mock" (demo data, no game needed)
     "only_when_focused": True,     # hide the overlay when Minecraft isn't the active window
     "preview_background": True,    # dim the preview area when no game window is found
     "fov": 70.0,                   # must match the in-game FOV until we read it from memory

@@ -2,7 +2,10 @@
 import json
 from pathlib import Path
 
-OFFSETS_PATH = Path(__file__).resolve().parent.parent / "data" / "offsets.json"
+from ..paths import BUNDLED_OFFSETS, USER_OFFSETS
+
+# Where the automatic offset update saves (next to the exe when frozen, the repo file from source).
+OFFSETS_PATH = USER_OFFSETS
 
 
 def _hex(value) -> int:
@@ -15,8 +18,10 @@ class Offsets:
 
     @classmethod
     def load(cls) -> "Offsets":
+        # An updated offsets.json next to the exe wins over the copy built into it.
+        path = USER_OFFSETS if USER_OFFSETS.exists() else BUNDLED_OFFSETS
         try:
-            return cls(json.loads(OFFSETS_PATH.read_text(encoding="utf-8")))
+            return cls(json.loads(path.read_text(encoding="utf-8")))
         except (OSError, ValueError):
             return cls({})
 

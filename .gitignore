@@ -19,3 +19,8 @@ tools/results/
 tools/
 requirements-dev.txt
 .idea/
+
+# PyInstaller output
+build/
+dist/
+*.spec

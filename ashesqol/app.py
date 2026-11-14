@@ -4,10 +4,12 @@ import sys
 import time
 
 from PyQt6.QtCore import QRect, Qt, QTimer
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 
 from . import APP_NAME
 from .config import Config
+from .paths import FROZEN, ICON_PATH, LOG_PATH
 from .core import win32
 from .core.offsets import Offsets
 from .core.process import GameProcess
@@ -32,6 +34,8 @@ class AshesApp:
     def __init__(self, argv=None):
         self.qapp = QApplication.instance() or QApplication(argv or sys.argv)
         self.qapp.setApplicationName(APP_NAME)
+        if ICON_PATH.exists():
+            self.qapp.setWindowIcon(QIcon(str(ICON_PATH)))
         self.qapp.setStyleSheet(STYLESHEET)
 
         self.config = Config.load()
@@ -258,5 +262,10 @@ def run() -> int:
     # Background scanners share Python's GIL with the overlay; switching threads every 1 ms
     # (default 5 ms) keeps a busy scanner from delaying a frame by more than about a millisecond.
     sys.setswitchinterval(0.001)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    if FROZEN:      # the exe has no console: keep a log file next to it
+        logging.basicConfig(level=logging.INFO, format=fmt, filename=LOG_PATH, filemode="w", encoding="utf-8")
+    else:
+        logging.basicConfig(level=logging.INFO, format=fmt)
+    logging.getLogger("pymem").setLevel(logging.WARNING)
     return AshesApp().run()

@@ -50,6 +50,19 @@ or a classic settings window.
 
 ## Installation
 
+### Option 1: download the executable (easiest)
+
+1. Download `AshesQOL.exe` from the [Releases](https://github.com/a-s-h-e-d/AshesQOL-Minecraft-Bedrock-Client/releases)
+   page.
+2. Put it in **its own folder**. It keeps `config\settings.json`, `ashesqol.log` and any updated `offsets.json` next
+   to itself.
+3. Double-click it. You don't need Python.
+
+The exe isn't code-signed, so Windows SmartScreen may say *"Windows protected your PC"*. Click **More info → Run
+anyway**. Antivirus tools sometimes flag it too, because it reads another program's memory.
+
+### Option 2: run from source
+
 ```powershell
 git clone https://github.com/a-s-h-e-d/AshesQOL-Minecraft-Bedrock-Client.git
 cd AshesQOL-Minecraft-Bedrock-Client
@@ -64,6 +77,8 @@ automatic offset update.
 
 ## Usage
 
+Start `AshesQOL.exe`, or from source:
+
 ```powershell
 .venv\Scripts\activate
 python main.py
@@ -71,8 +86,8 @@ python main.py
 
 1. Start Minecraft and join a world. Use **windowed or borderless fullscreen**: an exclusive-fullscreen game can draw
    over the overlay.
-2. In the AshesQOL window, set **Data source** to **Memory (Minecraft)**.
-   **Mock (demo data)** shows a preview with fake entities, which is handy for trying settings without the game.
+2. AshesQOL connects to the game by itself. **Data source** is **Memory (Minecraft)** by default. Switch it to
+   **Mock (demo data)** for a preview with fake entities, which is handy for trying settings without the game.
 3. Set **Game FOV** to the FOV in Minecraft's video settings so boxes line up.
 4. Turn modules on in the settings window, or press **Right Shift** in-game to open the click GUI.
 
@@ -109,7 +124,8 @@ because it's the sneak key.
 
 ## Configuration
 
-Settings are saved to `config/settings.json` when you click **Save** or close AshesQOL. This includes module settings,
+Settings are saved to `config/settings.json` (next to `AshesQOL.exe`, or in the repo folder when running from source)
+when you click **Save** or close AshesQOL. This includes module settings,
 keybinds, hotkeys and click GUI panel positions. Delete the file to reset everything.
 
 Useful options in the settings window:
@@ -185,6 +201,17 @@ ashesqol/
   data/offsets.json        version-specific memory layout
 docs/                      notes on the game's memory layout
 ```
+
+## Building the executable
+
+```powershell
+.venv\Scripts\activate
+pip install pyinstaller
+python build.py
+```
+
+This creates `dist\AshesQOL.exe`, a single file of about 50 MB with no console window. Messages go to
+`ashesqol.log` next to the exe.
 
 ## Adding a module
 
