@@ -108,6 +108,7 @@ class MemoryProvider(DataProvider):
         self._last_scan = -SCAN_BACKOFF[1]
         self._scan_wait = 0.0          # grows after each fruitless full scan
         self.interpolate = True
+        self.ignore_version = False      # 'Try anyway' on unsupported game versions
         self.clock = TickClock()
         self._prev_rotation = (0.0, 0.0)
         self._tick_rotation = (0.0, 0.0)
@@ -485,6 +486,12 @@ class MemoryProvider(DataProvider):
             return GameState.invalid(f"Not attached: {self.process.attach_error or 'attaching...'}", self.key)
         if not self.offsets.ready:
             return GameState.invalid("Attached - offsets not set (memory recon step)", self.key)
+        if not self.ignore_version and not self.offsets.supports(self.process.version):
+            # Different game build: the offsets almost certainly moved. Don't run memory searches that
+            # can't succeed; say what's wrong instead.
+            return GameState.invalid(
+                f"Minecraft {self.process.version} isn't supported yet "
+                f"(offsets are for {self.offsets.exe_version})", self.key)
 
         self._player_cooldown -= dt
         self._storage_cooldown -= dt
@@ -562,6 +569,19 @@ class MemoryProvider(DataProvider):
             self._block_cache_key = key
             self._block_cache = [b for b in scanner.hits if b.block in self.wanted_blocks]
         return self._block_cache, scanner.status
+
+    def reset(self) -> None:
+        """Forget everything found so far (e.g. after the offsets were updated)."""
+        self.shutdown()
+        self._blocks = None
+        self._camera = None
+        self.player_addr = self.storage_addr = None
+        self._types.clear()
+        self._not_actor.clear()
+        self._dimension_names.clear()
+        self._scan_hits = None
+        self._scan_wait = 0.0
+        self._last_scan = -SCAN_BACKOFF[1]
 
     def shutdown(self) -> None:
         if self._blocks is not None:

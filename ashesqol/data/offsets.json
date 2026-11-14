@@ -1,6 +1,7 @@
 {
-  "_comment": "Found via recon (see docs/recon-1.26.63.md). Hex strings. game_version must match the running build. Chains: [module_rva, off1, ...] = read qword at base+rva, then qword at (ptr+off) for each off; the final pointer must point exactly at the object, which is then checked against its vtable RVA.",
+  "_comment": "Found via recon (see docs/recon-1.26.63.md). Hex strings. game_version must match the running build. Chains: [module_rva, off1, ...] = read qword at base+rva, then qword at (ptr+off) for each off; the final pointer must point exactly at the object, which is then checked against its vtable RVA. exe_version is the exact Minecraft.Windows.exe file version these offsets were found on; other builds are refused unless 'Try anyway' is on.",
   "game_version": "1.26.63",
+  "exe_version": "1.26.63.1",
   "local_player": {
     "_comment": "vtable: single-player client player, then the Realm/server one. Fast lookup: fixed offset inside a 16MB-aligned heap segment (single-player only). Otherwise it's entry 0 of the client actor storage.",
     "vtable": [

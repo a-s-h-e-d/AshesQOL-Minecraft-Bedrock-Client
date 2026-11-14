@@ -200,6 +200,10 @@ class ControlWindow(QMainWindow):
         self.hint.setObjectName("muted")
         footer.addWidget(self.hint)
         footer.addStretch()
+        update = QPushButton("Update offsets…")
+        update.setToolTip("Re-find the game's memory layout automatically (after a Minecraft update)")
+        update.clicked.connect(lambda: app.updater.ask(manual=True))
+        footer.addWidget(update)
         save = QPushButton("Save")
         save.clicked.connect(app.save)
         footer.addWidget(save)
@@ -216,6 +220,7 @@ class ControlWindow(QMainWindow):
         self.power.setToolTip(f"Turn all of AshesQOL on/off (hotkey: {pretty(cfg['toggle_key'])})")
 
     def _build_general(self) -> QGroupBox:
+        self._general_boxes: dict[str, QCheckBox] = {}
         group = QGroupBox("General")
         form = QFormLayout(group)
         cfg = self.app.config
@@ -243,11 +248,13 @@ class ControlWindow(QMainWindow):
 
         for key, label in (("show_control_on_start", "Show this window when AshesQOL starts (else use the click GUI)"),
                            ("interpolate", "Smooth movement between game ticks (fixes laggy ESP trails)"),
+                           ("ignore_version_check", "Try anyway on unsupported Minecraft versions (may find nothing)"),
                            ("only_when_focused", "Only show overlay while Minecraft is focused"),
                            ("preview_background", "Dim the preview area when the game isn't found")):
             box = QCheckBox(label)
             box.setChecked(cfg[key])
             box.toggled.connect(lambda v, k=key: cfg.__setitem__(k, v))
+            self._general_boxes[key] = box
             form.addRow("", box)
         return group
 
@@ -281,6 +288,13 @@ class ControlWindow(QMainWindow):
         layout.addLayout(form)
         layout.addStretch()
         self.settings_area.setWidget(panel)
+
+    def sync_general(self):
+        """Refresh the General checkboxes after the config changed elsewhere."""
+        for key, box in self._general_boxes.items():
+            box.blockSignals(True)
+            box.setChecked(bool(self.app.config[key]))
+            box.blockSignals(False)
 
     def refresh_current(self):
         """Rebuild the visible settings panel (values may have changed in the click GUI)."""

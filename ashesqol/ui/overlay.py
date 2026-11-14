@@ -115,7 +115,7 @@ class Overlay(QWidget):
                     wants.add("entities")
                 elif m.wanted_blocks():
                     wants.add("blocks")
-        lines = [text for kind, text in ctx.state.notices if kind in wants]
+        lines = self.app.system_notices() + [text for kind, text in ctx.state.notices if kind in wants]
         _, h = ctx.text_size("X")
         for i, text in enumerate(lines):
             y = 6 + i * (h + 2)

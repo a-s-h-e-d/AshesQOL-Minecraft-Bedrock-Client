@@ -18,6 +18,7 @@ from .game.state import GameState
 from .modules import create_modules
 from .modules.base import TickContext
 from .ui.clickgui import ClickGui
+from .ui.offset_update import OffsetUpdater
 from .ui.control import ControlWindow
 from .ui.overlay import Overlay, native_to_logical
 from .ui.theme import STYLESHEET
@@ -51,6 +52,7 @@ class AshesApp:
         self.overlay = Overlay(self)
         self.control = ControlWindow(self)
         self.clickgui = ClickGui(self)
+        self.updater = OffsetUpdater(self)     # offers the automatic offset update after game updates
 
         self._last_tick = time.perf_counter()
         self._tick_failed: set[str] = set()
@@ -74,14 +76,19 @@ class AshesApp:
         """Once per second: find the game process/window, attach if reading memory."""
         self.process.refresh(want_memory=self.config["source"] == "memory")
         self.control.set_status(self._status_text())
+        self.updater.check()
 
     def _status_text(self) -> str:
         p = self.process
         if p.pid is None:
             return "Minecraft: not running"
-        parts = [f"Minecraft: pid {p.pid}", "window found" if p.hwnd else "no window"]
+        parts = [f"Minecraft {p.version or ''}".strip() + f": pid {p.pid}", "window found" if p.hwnd else "no window"]
         if p.pm is not None:
             parts.append(f"attached @ 0x{p.base_address:X}")
+            if self.updater.notice():
+                parts.append("updating offsets...")
+            elif not self.offsets.supports(p.version):
+                parts.append(f"UNSUPPORTED VERSION (offsets are for {self.offsets.exe_version})")
         elif p.attach_error:
             parts.append("attach failed")
         return "  ·  ".join(parts)
@@ -115,6 +122,7 @@ class AshesApp:
         if not self.active:
             return
         self.providers["memory"].interpolate = self.config["interpolate"]
+        self.providers["memory"].ignore_version = self.config["ignore_version_check"]
         self.provider.wanted_blocks = frozenset(b for m in self.modules if m.enabled for b in m.wanted_blocks())
         self.providers["memory"].block_range = max([m.block_range() for m in self.modules if m.enabled] or [0.0])
         self.reader.provider = self.provider
@@ -212,7 +220,13 @@ class AshesApp:
         self.config.save()
         log.info("Settings saved")
 
+    def system_notices(self) -> list[str]:
+        """Notices shown on the overlay regardless of which modules are on."""
+        text = self.updater.notice()
+        return [text] if text else []
+
     def quit(self) -> None:
+        self.updater.shutdown()
         self.clickgui.hide()
         self.clickgui._save_panels()
         self.reader.stop()

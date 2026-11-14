@@ -2,18 +2,21 @@
 
 A quality-of-life overlay for **Minecraft: Bedrock Edition (Windows)**, written in Python.
 
-AshesQOL runs as a separate program next to the game. It reads the game's memory (read-only) and draws ESP boxes,
-tracers, nametags, a HUD and highlighted blocks in a transparent, click-through window on top of Minecraft. It comes
-with a Future/Meteor-style click GUI and a classic settings window.
+AshesQOL runs as a separate program next to the game. It reads the game's memory and draws its modules in a
+transparent, click-through window on top of Minecraft. You control everything from a Future/Meteor-style click GUI
+or a classic settings window.
 
 > **Disclaimer.** This is an independent project, not affiliated with or endorsed by Mojang or Microsoft.
-> Features like ESP and BlockESP count as cheats on most servers and Realms, and using them there may break server
-> rules or Minecraft's terms of use. Use AshesQOL in single-player or in worlds where everyone agrees to it.
-> Freecam writes to the game's memory: keep it to single-player. You use this software at your own risk.
+> Showing information the game normally hides (for example through walls) counts as cheating on most servers and
+> Realms, and may break server rules or Minecraft's terms of use. Use AshesQOL in single-player or in worlds where
+> everyone agrees to it. Modules that write to the game's memory say so in their description: keep those to
+> single-player. You use this software at your own risk.
 
 ---
 
 ## Features
+
+### Modules
 
 | Module | What it does |
 |---|---|
@@ -25,7 +28,7 @@ with a Future/Meteor-style click GUI and a classic settings window.
 | **Freecam** | Detach the camera and fly it around with WASD; you snap back when you turn it off. Single-player only. |
 | **ClickGUI** | Colors, RGB mode, background dimming and font of the click GUI. |
 
-The rest of the app:
+### Everything else
 
 - **Click GUI** (Right Shift) with draggable category panels and inline settings. There's also a full **settings
   window** (Insert).
@@ -55,8 +58,9 @@ py -m venv .venv
 pip install -r requirements.txt
 ```
 
-Dependencies: [PyQt6](https://pypi.org/project/PyQt6/) for the windows and overlay, and
-[pymem](https://pypi.org/project/Pymem/) for reading the game's memory.
+Dependencies: [PyQt6](https://pypi.org/project/PyQt6/) for the windows and overlay,
+[pymem](https://pypi.org/project/Pymem/) for reading the game's memory, and [numpy](https://numpy.org/) for the
+automatic offset update.
 
 ## Usage
 
@@ -81,7 +85,7 @@ the screen shows what it's still looking for:
 |---|---|---|
 | Your player and nearby entities | under a second | up to ~40 s |
 | Per-frame camera (smooth turning) | ~30 s | ~30 s |
-| BlockESP chunk data (first time) | ~35 s | ~40 s |
+| Block data, for modules that show blocks (first time) | ~35 s | ~40 s |
 
 ### Hotkeys
 
@@ -98,19 +102,10 @@ because it's the sneak key.
 ### Click GUI
 
 - **Left-click** a module to turn it on or off. **Right-click** it to show its settings.
-- In settings, sliders can be dragged, options cycle with left- and right-click, and colors and the block list open a
-  picker.
+- In settings, sliders can be dragged, options cycle with left- and right-click, and colors and lists open a picker.
 - **Drag** a panel by its header. **Right-click** a header to collapse it. **Scroll** over a long panel to move it.
 - **Esc** or **Right Shift** closes the GUI and gives focus back to Minecraft. In single-player, Bedrock may show its
   pause menu when the GUI opens; press Esc in-game after closing.
-
-### Freecam
-
-1. Turn Freecam on. In single-player, its WASD mode takes **W/A/S/D, Space, Shift and Ctrl** away from Minecraft while
-   it's on, so your real player stays put.
-2. Fly with **W/A/S/D**, go up and down with **Space/Shift**, and hold **Ctrl** for 4× speed. The mouse looks around
-   as usual.
-3. Turn Freecam off to snap back to where you started.
 
 ## Configuration
 
@@ -130,7 +125,8 @@ Useful options in the settings window:
 | Problem | Try |
 |---|---|
 | Status says **attach failed** | Run the terminal or IDE **as administrator**. |
-| HUD says **Not in a world** for a long time | Check your game version. The offsets only match 1.26.63. On Realms, wait up to ~40 s. |
+| Status says **UNSUPPORTED VERSION** | Minecraft updated and the offsets haven't been updated yet. See [Game updates](#game-updates). |
+| Status says **Not in a world** for a long time | Check your game version. The offsets only match 1.26.63. On Realms, wait up to ~40 s. |
 | Overlay doesn't appear over the game | Use windowed or borderless mode, and check that **Data source** is **Memory**. |
 | Boxes are offset from mobs | Match **Game FOV** to the game. Sprinting, flying and view bobbing change the in-game FOV. |
 | Boxes trail when turning, right after joining | Normal for the first ~30 s, until the camera is found (see the on-screen notice). |
@@ -138,24 +134,37 @@ Useful options in the settings window:
 
 ## Game updates
 
-Minecraft updates usually move things around in memory. Everything version-specific is in one file,
+Minecraft updates usually move things around in memory. AshesQOL checks the game's exact build (for example
+`1.26.63.1`) against the build its offsets were made for.
+
+When they differ, AshesQOL asks what to do:
+
+- **Update automatically**: join a world (single-player or a Realm) first. AshesQOL then searches the game's memory
+  and re-finds every value, which takes about 2–3 minutes in the background with progress shown on screen. It only
+  saves the new values if they all check out, and keeps the old ones as a backup (`offsets.<old version>.json`).
+  You can also start this any time with **Update offsets…** in the settings window.
+- **Try anyway**: keep the current offsets. Sometimes a small hotfix doesn't move anything.
+- **Not now**: the status shows **UNSUPPORTED VERSION**, and AshesQOL doesn't search memory, because that couldn't
+  succeed.
+
+The automatic update re-finds the *identifiers* that move with every build. If an update also changes how data is
+laid out inside the game's objects, it stops and says so, and the offsets need a manual update.
+
+Everything version-specific is in one file,
 [`ashesqol/data/offsets.json`](ashesqol/data/offsets.json): class identifiers (vtables), field offsets and data
 layouts. [`docs/recon-1.26.63.md`](docs/recon-1.26.63.md) documents what each value is and how it was found.
-
-AshesQOL also tries to adapt by itself where it can. For example, it works out new block-storage layouts at runtime.
 
 ## How it works
 
 - **Overlay**: a transparent, click-through, always-on-top Qt window placed exactly over Minecraft's client area.
-- **Memory reading**: pymem with `ReadProcessMemory`, read-only. The only exception is Freecam, which writes the
-  client-side player position.
+- **Memory reading**: pymem with `ReadProcessMemory`. Read-only, except for modules that say they write.
 - **Finding the player**:
   - single-player: by its object signature at a fixed spot in a heap segment
   - Realms: through the game's entity list (an EnTT component storage)
 - **Entities**: read from that list. Positions are blended between ticks the way the game does it.
 - **Camera**: a separate per-frame rotation component is read, so the overlay turns with your view rather than with
   the 20-per-second game tick.
-- **BlockESP**: a background thread walks the loaded chunks:
+- **Blocks**: a background thread walks the loaded chunks:
   1. read each 16×16×16 section's palette
   2. skip sections without a wanted block
   3. decode only the ones that have one
@@ -170,8 +179,8 @@ ashesqol/
   app.py                   wires everything together, per-frame loop, hotkeys
   config.py                settings file
   core/                    process attach, memory search helpers, Win32 bits, keyboard hook
-  game/                    data providers, memory reader, block scanner, camera, 3D math
-  modules/                 HUD, ESP, Tracers, Nametags, BlockESP, Freecam, ClickGUI theme
+  game/                    data providers, memory reader, block scanner, camera, offset update, 3D math
+  modules/                 one file per module (see the table above)
   ui/                      overlay, click GUI, settings window, block picker, fonts, theme
   data/offsets.json        version-specific memory layout
 docs/                      notes on the game's memory layout

@@ -25,6 +25,14 @@ class Offsets:
         return self.data.get("game_version") or ""
 
     @property
+    def exe_version(self) -> str:
+        """Exact Minecraft.Windows.exe file version the offsets were found on (e.g. '1.26.63.1')."""
+        return self.data.get("exe_version") or ""
+
+    def supports(self, version: str | None) -> bool:
+        return not self.exe_version or not version or version == self.exe_version
+
+    @property
     def ready(self) -> bool:
         lp = self.data.get("local_player") or {}
         return bool(self.game_version and lp.get("vtable"))

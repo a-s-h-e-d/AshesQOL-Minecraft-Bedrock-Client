@@ -19,6 +19,7 @@ DEFAULTS = {
     "show_control_on_start": True, # False: start with only the click GUI / hotkeys
     "max_fps": 0,                  # overlay redraw rate; 0 = match the monitor's refresh rate
     "interpolate": True,           # smooth movement between the game's 20 ticks/s
+    "ignore_version_check": False, # True: try the current offsets even on a different game build
     "modules": {},
 }
 

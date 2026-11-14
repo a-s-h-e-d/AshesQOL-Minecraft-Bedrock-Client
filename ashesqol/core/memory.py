@@ -80,6 +80,49 @@ def find_qwords_in_segment_heads(pm, values, align: int, window: int,
     return found
 
 
+def find_bytes(pm, needle: bytes, should_stop=lambda: False, align: int = 1) -> list[int]:
+    """Every address where `needle` occurs (optionally only at multiples of `align`)."""
+    found: list[int] = []
+    overlap = len(needle) - 1
+    for base, size in writable_regions(pm.process_handle):
+        for off in range(0, size, _CHUNK):
+            if should_stop():
+                return found
+            try:
+                buf = pm.read_bytes(base + off, min(_CHUNK + overlap, size - off))
+            except Exception:
+                continue
+            i = buf.find(needle)
+            while i != -1 and i < _CHUNK:
+                if (base + off + i) % align == 0:
+                    found.append(base + off + i)
+                i = buf.find(needle, i + 1)
+            time.sleep(0)
+    return found
+
+
+def find_qwords_in_set(pm, values, should_stop=lambda: False) -> list[tuple[int, int]]:
+    """(address, value) for every 8-byte-aligned qword whose value is in `values` (needs numpy)."""
+    import numpy as np                     # only needed for this (offset rediscovery)
+    if not values:
+        return []
+    targets = np.array(sorted(values), dtype=np.uint64)
+    found: list[tuple[int, int]] = []
+    for base, size in writable_regions(pm.process_handle):
+        for off in range(0, size, _CHUNK):
+            if should_stop():
+                return found
+            try:
+                buf = pm.read_bytes(base + off, min(_CHUNK, size - off))
+            except Exception:
+                continue
+            a = np.frombuffer(buf[: len(buf) // 8 * 8], dtype=np.uint64)
+            for i in np.nonzero(np.isin(a, targets))[0]:
+                found.append((base + off + int(i) * 8, int(a[i])))
+            time.sleep(0)
+    return found
+
+
 def find_qword(pm, value: int, should_stop=lambda: False) -> list[int]:
     return find_qwords(pm, [value], should_stop)[value]
 

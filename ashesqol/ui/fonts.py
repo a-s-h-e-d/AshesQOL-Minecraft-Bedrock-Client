@@ -3,33 +3,22 @@
 AshesQOL doesn't ship the font: it's read from <game>/data/fonts/Mojangles.ttf. The game folder
 comes from the running process's executable path, or from the installed app package.
 """
-import ctypes
 import logging
 import subprocess
-from ctypes import wintypes
 from pathlib import Path
 
 from PyQt6.QtGui import QFont, QFontDatabase
 
 log = logging.getLogger(__name__)
 
-_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-_kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR,
-                                                 ctypes.POINTER(wintypes.DWORD)]
 _RELATIVE = Path("data") / "fonts" / "Mojangles.ttf"
 _family: str | None = None
 _tried = False
 
 
 def _exe_dir(process) -> Path | None:
-    pm = getattr(process, "pm", None)
-    if pm is None:
-        return None
-    buf = ctypes.create_unicode_buffer(1024)
-    size = wintypes.DWORD(len(buf))
-    if _kernel32.QueryFullProcessImageNameW(pm.process_handle, 0, buf, ctypes.byref(size)):
-        return Path(buf.value).parent
-    return None
+    path = getattr(process, "exe_path", None)
+    return Path(path).parent if path else None
 
 
 def _package_dir() -> Path | None:
