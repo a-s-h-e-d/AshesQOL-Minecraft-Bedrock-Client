@@ -1,0 +1,96 @@
+{
+  "_comment": "Found via recon (see docs/recon-1.26.63.md). Hex strings. game_version must match the running build. Chains: [module_rva, off1, ...] = read qword at base+rva, then qword at (ptr+off) for each off; the final pointer must point exactly at the object, which is then checked against its vtable RVA.",
+  "game_version": "1.26.63",
+  "local_player": {
+    "_comment": "vtable: single-player client player, then the Realm/server one. Fast lookup: fixed offset inside a 16MB-aligned heap segment (single-player only). Otherwise it's entry 0 of the client actor storage.",
+    "vtable": [
+      "0xF0C57D0",
+      "0xF2DFEF0"
+    ],
+    "arena": {
+      "align": "0x1000000",
+      "offset": "0x122000"
+    },
+    "chains": []
+  },
+  "actor": {
+    "_comment": "Offsets inside an Actor object. type_name is an MSVC std::string like 'minecraft:zombie'.",
+    "type_name": "0x210",
+    "state_vector": "0x240",
+    "aabb": "0x248",
+    "rotation": "0x250",
+    "dimension": "0x1F0"
+  },
+  "actor_storage": {
+    "_comment": "EnTT storage of Actor* (client registry); the local player is entry 0. Single-player: in the player's segment (+0x30990..+0x40F90). Realms: start of some other segment (+0x8C490). Found by scanning the first segment_window bytes of every 16MB segment, then a full scan as a last resort.",
+    "vtable": "0xF0AE470",
+    "packed_begin": "0x20",
+    "packed_end": "0x28",
+    "pages": "0x50",
+    "page_size": 1024,
+    "chains": [],
+    "arena_window": "0x400000",
+    "segment_window": "0x200000"
+  },
+  "state_vector": {
+    "pos": "0x0",
+    "pos_prev": "0xC",
+    "delta": "0x18",
+    "size": "0x24"
+  },
+  "aabb": {
+    "min": "0x0",
+    "max": "0xC",
+    "width": "0x18",
+    "height": "0x1C",
+    "size": "0x20"
+  },
+  "rotation": {
+    "pitch": "0x0",
+    "yaw": "0x4",
+    "pitch_prev": "0x8",
+    "yaw_prev": "0xC",
+    "size": "0x10"
+  },
+  "chunk": {
+    "_comment": "LevelChunk has no vtable; found via a member object's vtable at member_offset. Pooled at 'stride'. Sections: vector of SubChunk; layer1 holds water/waterlogging.",
+    "member_vtable": "0xF1AD490",
+    "member_offset": "0x1898",
+    "stride": "0x1C00",
+    "pos": "0x78",
+    "sections": "0x1C8",
+    "section_size": "0x68",
+    "layer0": "0x20",
+    "layer1": "0x28",
+    "dimension": "0x58"
+  },
+  "block_storage": {
+    "_comment": "Sub-chunk block storage: vtable -> bits per block. Words at +0x8 (index = x*256 + z*16 + y); 8-aligned palette of Block* (capacity 2^bits) then u64 size. 0 bits = one Block* at +0x8. Unknown vtables are learned at runtime.",
+    "words": "0x8",
+    "layouts": {
+      "0xF27D520": 0,
+      "0xF27D5D0": 1,
+      "0xF27D680": 2,
+      "0xF27D730": 3,
+      "0xF27D7E0": 4,
+      "0xF27D890": 5,
+      "0xF27D940": 6,
+      "0xF27D9F0": 8
+    }
+  },
+  "block": {
+    "_comment": "Block -> BlockLegacy (+legacy) whose std::string at +name is the block id.",
+    "vtable": "0xF1831C8",
+    "legacy": "0x68",
+    "name": "0xE8"
+  },
+  "view_matrix": null,
+  "camera_rotation": {
+    "_comment": "EnTT storage (vtable shared with other component types) whose entry 0 is the local player's per-frame (pitch, yaw). Not the client's tick-rate rotation storage.",
+    "storage_vtable": "0xF0AED00"
+  },
+  "dimension": {
+    "_comment": "Dimension object: std::string name at +name ('Overworld', 'Nether', 'TheEnd').",
+    "name": "0x20"
+  }
+}

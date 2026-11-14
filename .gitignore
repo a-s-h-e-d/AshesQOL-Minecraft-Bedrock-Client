@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+
+# Per-user settings written by the app
+config/settings.json
+
+# Cheat Engine pointer maps
+*.scandata
+*.scandata.addresslist
+*.PTR
+*.PTR.results.*
+
+# Output of the recon tools (memory addresses from one game session)
+tools/results/
+
+# Local only: recon tools, IDE settings
+tools/
+requirements-dev.txt
+.idea/
