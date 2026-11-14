@@ -188,4 +188,7 @@ Both GUIs build their controls from the settings automatically.
 
 ## License
 
-No license has been chosen yet, so all rights are reserved for now.
+[MIT](LICENSE) © 2026 a-s-h-e-d
+
+The Minecraft font option uses `Mojangles.ttf` from your own Minecraft installation. The font belongs to
+Mojang and isn't part of this project or its license.
